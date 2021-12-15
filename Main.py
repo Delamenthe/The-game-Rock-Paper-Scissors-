@@ -2,10 +2,36 @@ import sys
 import secrets
 import hashlib, hmac
 from prettytable import PrettyTable
+import copy
+
+
+class Table:
+    def generateTable (self, args):
+        names = copy.copy(args)
+        names.insert(0," ")
+        table_of_moves = PrettyTable()
+        table_of_moves.field_names = names
+        size=len(args)
+        rez=[["Lose" for j in range(size)] for i in range(len(args))]
+        k=(size-1)/2
+        for i in range(size):
+            for j in range(size):
+                if i==j: rez[i][j]='Draw'
+                elif i>j+k or (j > i > j - k - 1): rez[i][j]= 'Win'
+
+        for i in range(size):
+            rez[i].insert(0,args[i])
+            table_of_moves.add_row(rez[i])
+        return table_of_moves
+
 
 class Main:
     args = sys.argv
     args.pop(0)
+    table = Table()
+    print(table.generateTable(args))
+
+
     if len(args) < 3:
         print("Error! The number of arguments cannot be less than 3. Please enter more arguments")
         exit()
@@ -40,4 +66,3 @@ class Main:
         else:
             print('Your move:', args[moveNum - 1])
             exit()
-
