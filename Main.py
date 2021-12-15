@@ -1,6 +1,8 @@
 import sys
 import secrets
 import hashlib, hmac
+from random import random
+
 from prettytable import PrettyTable
 import copy
 
@@ -26,13 +28,20 @@ class Rules:
                 elif i>j+k or (j > i > j - k - 1): rez[i][j]= 'Win'
         return rez
 class Encryption:
-    def hmac_calculate(self,args):
-        s = secrets.choice(args)
-        h = hmac.new(s.encode(), None, hashlib.sha256)
+    key=0
+    def hmac_calculate(self,move):
+        key=secrets.randbits(256)
+        unity=str(key)+move
+        h = hashlib.sha3_256(unity.encode())
         print(h.hexdigest().upper())
+        return key
 class Main:
     args = sys.argv
     args.pop(0)
+
+    rules = Rules()
+    rezult=rules.def_rules(args,len(args))
+
     if len(args) < 3:
         print("Error! The number of arguments cannot be less than 3. Please enter more arguments")
         exit()
@@ -44,12 +53,14 @@ class Main:
             if args.count(i) > 1:
                 print("Error! Arguments should not be repeated. Please change the list of arguments")
                 exit()
-    print('\nComputers move:')
-    crypt = Encryption()
-    crypt.hmac_calculate(args)
 
-    print('\nYour turn. Please, select the move number from the list below:')
     while True:
+        print('\nComputers move:')
+        computers_move = 'Rock'
+        crypt = Encryption()
+        key=crypt.hmac_calculate(computers_move)
+
+        print('\nYour turn. Please, select the move number from the list below:')
         print('0 - exit')
         for i in range(len(args)):
             print(i + 1, '-', args[i])
@@ -58,19 +69,21 @@ class Main:
         if moveNumStr=='0': exit()
         elif moveNumStr=='?':
             table = Table()
-            rules = Rules()
-            print(table.generateTable(args,len(args),rules.defRules(args,len(args))))
+            print(table.generate_table(args,len(args),rezult))
         else:
             try:
                 int(moveNumStr)
                 moveNum = int(moveNumStr)
             except ValueError:
-                print('Error! Not a number is entered. Please enter the move number from the list below:')
+                print('Error! Not a number is entered.')
                 continue
             if moveNum < 0 or moveNum > len(args):
-                print('Error! You are enter not a number', moveNum,
-                      '. Please select the option number from the menu list. For example \"1\"')
+                print('Error! There is no a number', moveNum,
+                      'in the list. Please select the option number from the menu list. For example \"1\"')
                 continue
             else:
                 print('Your move:', args[moveNum - 1])
-                exit()
+                print(rezult[args.index(computers_move)][moveNum-1])
+                print('Computers move:', computers_move)
+                print('Source key:', key)
+
