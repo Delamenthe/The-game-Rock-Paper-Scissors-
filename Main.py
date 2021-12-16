@@ -1,22 +1,22 @@
 import sys
 import secrets
-import hashlib, hmac
-from random import random
-
-from prettytable import PrettyTable
+import hashlib
 import copy
-
+import random
+from prettytable import PrettyTable
 
 class Table:
     def generate_table (self, args, size, rez):
-        names = copy.copy(args)
+        names = copy.deepcopy(args)
+        r = copy.deepcopy(rez)
         names.insert(0," ")
         table_of_moves = PrettyTable()
         table_of_moves.field_names = names
         for i in range(size):
-            rez[i].insert(0,args[i])
-            table_of_moves.add_row(rez[i])
-        return table_of_moves
+            if len(r[i])<size+1:
+                r[i].insert(0,args[i])
+            table_of_moves.add_row(r[i])
+        print(table_of_moves)
 
 class Rules:
     def def_rules (self,args,size):
@@ -27,6 +27,7 @@ class Rules:
                 if i==j: rez[i][j]='Draw'
                 elif i>j+k or (j > i > j - k - 1): rez[i][j]= 'Win'
         return rez
+
 class Encryption:
     key=0
     def hmac_calculate(self,move):
@@ -35,10 +36,11 @@ class Encryption:
         h = hashlib.sha3_256(unity.encode())
         print(h.hexdigest().upper())
         return key
+
 class Main:
     args = sys.argv
     args.pop(0)
-
+    flag=True
     rules = Rules()
     rezult=rules.def_rules(args,len(args))
 
@@ -55,35 +57,40 @@ class Main:
                 exit()
 
     while True:
-        print('\nComputers move:')
-        computers_move = 'Rock'
-        crypt = Encryption()
-        key=crypt.hmac_calculate(computers_move)
-
-        print('\nYour turn. Please, select the move number from the list below:')
+        if flag:
+            print('\nComputers move:')
+            computers_move = random.choice(args)
+            crypt = Encryption()
+            key=crypt.hmac_calculate(computers_move)
+            print('\nYour turn. Please, select the move number from the list below:')
+        flag=True
         print('0 - exit')
         for i in range(len(args)):
             print(i + 1, '-', args[i])
         print('? - help')
         moveNumStr = input("Enter you move:")
-        if moveNumStr=='0': exit()
+        if moveNumStr=='0': break
         elif moveNumStr=='?':
             table = Table()
-            print(table.generate_table(args,len(args),rezult))
-        else:
-            try:
-                int(moveNumStr)
-                moveNum = int(moveNumStr)
-            except ValueError:
-                print('Error! Not a number is entered.')
-                continue
-            if moveNum < 0 or moveNum > len(args):
-                print('Error! There is no a number', moveNum,
+            table.generate_table(args,len(args),rezult)
+            flag=False
+            continue
+        try:
+            int(moveNumStr)
+            moveNum = int(moveNumStr)
+        except ValueError:
+            print('Error! Not a number is entered.Please select the option from the menu list. For example \"?\"')
+            flag=False
+            continue
+        if moveNum < 0 or moveNum > len(args):
+            print('Error! There is no a number', moveNum,
                       'in the list. Please select the option number from the menu list. For example \"1\"')
-                continue
-            else:
-                print('Your move:', args[moveNum - 1])
-                print(rezult[args.index(computers_move)][moveNum-1])
-                print('Computers move:', computers_move)
-                print('Source key:', key)
+            flag=False
+            continue
+        else:
+            print('Your move:', args[moveNum-1])
+            print(rezult[args.index(computers_move)][moveNum-1])
+            print('Computers move:', computers_move)
+            print('Source key:', key)
+        print('----------------------------------------------------------------------------------------------')
 
